@@ -8,6 +8,7 @@ import { Routes, Route } from "react-router";
 import Homepage from "./Components/homepage/homepage";
 // import Footer from "./Components/footer/Footer.jsx";
 import Event from "./Components/Event/Event.jsx";
+import LoginForm from "./Components/Forms/LoginForm/LoginSignupForm.jsx";
 
 function App() {
   return (
@@ -15,7 +16,10 @@ function App() {
       <Routes>
         <Route path="/" element={<Homepage />}></Route>
         <Route path="/events" element={<Event />}></Route>
+        <Route path="/login" element={<LoginForm />}></Route>
       </Routes>
+      
+      
       {/* <Event /> */}
       {/* <Mentor />
       <Footer2 /> */}
