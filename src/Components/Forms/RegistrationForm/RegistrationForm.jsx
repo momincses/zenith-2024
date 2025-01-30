@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   TextField,
   Button,
@@ -12,9 +12,15 @@ import {
   FormControlLabel,
   Container,
   Paper,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
 } from "@mui/material";
-import { db } from "../../../firebase"; // Import Firebase configuration
+import { db } from "../../../firebase";
 import { collection, addDoc, serverTimestamp } from "firebase/firestore";
+import { getAuth, onAuthStateChanged } from "firebase/auth";
+import { useNavigate } from "react-router-dom";
 
 const sportsList = [
   "Football",
@@ -36,6 +42,20 @@ const RegistrationForm = () => {
     agreeTerms: false,
     date: new Date().toISOString().split("T")[0], // Current date in YYYY-MM-DD format
   });
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [openDialog, setOpenDialog] = useState(false);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const auth = getAuth();
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+        if (user) {
+        setIsLoggedIn(true);
+      } else {
+        setIsLoggedIn(false);
+      }
+    });
+  }, []);
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -47,6 +67,10 @@ const RegistrationForm = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!isLoggedIn) {
+      setOpenDialog(true);
+      return;
+    }
     try {
       await addDoc(collection(db, "registrations"), {
         ...formData,
@@ -68,6 +92,11 @@ const RegistrationForm = () => {
       console.error("Error saving registration:", error);
       alert("Registration failed. Please try again.");
     }
+  };
+
+  const handleCloseDialog = () => {
+    setOpenDialog(false);
+    navigate("/login"); // Redirect to login page
   };
 
   return (
@@ -95,8 +124,6 @@ const RegistrationForm = () => {
             </Select>
           </FormControl>
 
-          {/* <TextField fullWidth margin="normal" label="Registration Date" name="date" type="date" value={formData.date} disabled /> */}
-
           <FormControlLabel
             control={<Checkbox name="agreeTerms" checked={formData.agreeTerms} onChange={handleChange} required />}
             label="I agree to the terms and conditions"
@@ -109,6 +136,21 @@ const RegistrationForm = () => {
           </Box>
         </form>
       </Paper>
+
+      {/* Dialog for Not Logged In */}
+      <Dialog open={openDialog} onClose={handleCloseDialog}>
+        <DialogTitle>{"You are not logged in!"}</DialogTitle>
+        <DialogContent>
+          <Typography variant="body1">
+            Please log in to register for the event.
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseDialog} color="primary">
+            Go to Login
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Container>
   );
 };
